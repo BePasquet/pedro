@@ -8,7 +8,7 @@ Run `npm run dev-server`
 
 ## Mobile
 
-Run `npm run start`
+Run `npm start`
 
 ## General
 
