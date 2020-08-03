@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export function mapValueToObjWithProp<T>(
+export function mapValueToObjWithProp<T = any>(
   key: string
 ): (source$: Observable<T>) => Observable<Record<string, T>> {
   return (source$: Observable<T>) =>
