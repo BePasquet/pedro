@@ -12,30 +12,22 @@ import {
   selectProductsLoading,
   selectProductsTotal,
 } from '@pedro/core';
-import {
-  Category,
-  Pagination,
-  Product,
-  ProductFilter,
-  ServerError,
-} from '@pedro/data';
+import { Category, Pagination, Product, ServerError } from '@pedro/data';
+import { mapValueToObjWithProp, observableReducer } from '@pedro/utilities';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
   map,
-  scan,
-  shareReplay,
   startWith,
   tap,
   withLatestFrom,
 } from 'rxjs/operators';
-
-interface ProductsControls {
-  name: string;
-  category: Category;
-  orderBy: Sort;
-}
+import { PRODUCTS_CATEGORIES, PRODUCTS_SORT_OPTIONS } from '../../core/const';
+import {
+  controlsToProductFilter,
+  CONTROLS_INITIAL_STATE,
+} from './products.helper';
 
 @Directive()
 export class Products {
@@ -69,94 +61,35 @@ export class Products {
     select(selectProductsError)
   );
 
-  readonly categories: Option<Category | string>[] = [
-    {
-      label: 'All',
-      value: null,
-    },
-    {
-      label: 'Books',
-      value: Category.Book,
-    },
-    {
-      label: 'Movies',
-      value: Category.Movie,
-    },
-  ];
+  readonly categories: Option<Category | string>[] = PRODUCTS_CATEGORIES;
 
-  readonly sortOptions: Option<Sort>[] = [
-    {
-      label: 'None',
-      value: { active: null, direction: null },
-    },
-    {
-      label: 'price low to high',
-      value: { active: 'price', direction: 'asc' },
-    },
-    {
-      label: 'price high to low',
-      value: { active: 'price', direction: 'desc' },
-    },
-  ];
+  readonly sortOptions: Option<Sort>[] = PRODUCTS_SORT_OPTIONS;
 
   protected readonly subscriptions: Subscription = new Subscription();
 
   constructor(private readonly store: Store<ProductsPartialState>) {
     const categorySlice$ = this.category$
       .asObservable()
-      .pipe(map((category) => ({ category })));
+      .pipe(mapValueToObjWithProp('category'));
 
     const orderBySlice$ = this.orderBy$
       .asObservable()
-      .pipe(map((orderBy) => ({ orderBy })));
+      .pipe(mapValueToObjWithProp('orderBy'));
 
-    const nameSlice$ = this.query$.asObservable().pipe(
-      debounceTime(250),
-      distinctUntilChanged(),
-      map((name) => ({ name }))
-    );
+    const nameSlice$ = this.query$
+      .asObservable()
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        mapValueToObjWithProp('name')
+      );
 
-    const controlsToProductFilter = ({
-      category,
-      orderBy: { active, direction },
-      name,
-    }: ProductsControls) => {
-      let orderBy = {};
-
-      if (!!direction) {
-        orderBy = { [active]: direction };
-      }
-
-      const filter: ProductFilter = {
-        name,
-        category: !!category ? category : null,
-        limit: 10,
-        offset: 0,
-        orderBy,
-      };
-
-      return filter;
-    };
-
-    const initialControlsState = {
-      name: '',
-      category: null,
-      orderBy: {
-        active: null,
-        direction: null,
-      },
-    };
-
-    const filterChanges$ = merge(
+    const filterChanges$ = observableReducer(
+      CONTROLS_INITIAL_STATE,
       categorySlice$,
       orderBySlice$,
       nameSlice$
-    ).pipe(
-      startWith(initialControlsState),
-      scan((state, slice) => ({ ...state, ...slice }), initialControlsState),
-      map(controlsToProductFilter),
-      shareReplay(1)
-    );
+    ).pipe(startWith(CONTROLS_INITIAL_STATE), map(controlsToProductFilter));
 
     const requestMoreProducts$ = this.pagination$.asObservable().pipe(
       tap(() => (this.page = this.page + 1)),
