@@ -1,0 +1,82 @@
+<div class="products-container">
+  <div fxLayout="row" fxLayoutGap="5%" fxLayoutAlign="start center">
+    <mat-form-field fxFlex="50">
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        type="text"
+        (input)="query$.next($event?.target?.value)"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field fxFlex="20">
+      <mat-label>Sort</mat-label>
+      <mat-select (valueChange)="orderBy$.next($event)">
+        <mat-option *ngFor="let sort of sortOptions" [value]="sort.value">{{
+          sort.label
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field fxFlex="20">
+      <mat-label>Category</mat-label>
+      <mat-select (valueChange)="category$.next($event)">
+        <mat-option
+          *ngFor="let category of categories"
+          [value]="category.value"
+          >{{ category.label }}</mat-option
+        >
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <ng-container *ngIf="products$ | async as products">
+    <div fxLayout="row wrap" *ngIf="(loaded$ | async) && (total$ | async)">
+      <div
+        class="card-container separator-s"
+        [fxFlex]="'calc((100% - 1em) / 2 )'"
+        *ngFor="let product of products"
+      >
+        <mat-card>
+          <mat-card-title>{{ product.name }}</mat-card-title>
+          <mat-card-content>
+            <img [src]="product.imgUrl" />
+          </mat-card-content>
+          <mat-card-footer fxLayout="row" fxLayoutAlign="end center">{{
+            product.price
+          }}</mat-card-footer>
+        </mat-card>
+      </div>
+
+      <div
+        fxFlex="100"
+        fxLayout="column"
+        fxLayoutAlign="center center"
+        *ngIf="products.length < (total$ | async) && !(loading$ | async)"
+      >
+        <button
+          color="primary"
+          mat-mini-fab
+          (click)="
+            pagination$.next({
+              offset: page * 10,
+              limit: 10
+            })
+          "
+        >
+          <mat-icon>keyboard_arrow_down</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div
+      *ngIf="loading$ | async"
+      fxLayout="column"
+      fxLayoutAlign="center center"
+      class="separator-m"
+    >
+      <mat-spinner [diameter]="50"></mat-spinner>
+    </div>
+    <ng-container *ngIf="(loaded$ | async) && !(total$ | async)">
+      <h3>Sorry there is no product to show</h3>
+    </ng-container>
+  </ng-container>
+</div>

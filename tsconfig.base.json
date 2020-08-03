@@ -15,7 +15,14 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@pedro/core": ["libs/core/src/index.ts"],
+      "@pedro/utilities": ["libs/utilities/src/index.ts"],
+      "@pedro/products": ["libs/products/src/index.ts"],
+      "@pedro/products-mobile": ["libs/products-mobile/src/index.ts"],
+      "@pedro/products-desktop": ["libs/products-desktop/src/index.ts"],
+      "@pedro/data": ["libs/data/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

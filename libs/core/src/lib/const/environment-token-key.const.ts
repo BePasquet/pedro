@@ -1,0 +1,1 @@
+export const ENVIRONMENT_TOKEN_KEY = 'ENVIRONMENT';

@@ -1,0 +1,19 @@
+.products-container {
+  padding: 1em;
+
+  .separator-s {
+    padding-bottom: 1em;
+  }
+
+  .separator-m {
+    padding-top: 2em;
+  }
+
+  .card-container:nth-child(odd) {
+    padding-right: 1em;
+  }
+
+  mat-card-footer {
+    padding: 1em;
+  }
+}

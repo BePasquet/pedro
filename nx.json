@@ -28,6 +28,31 @@
     "ecomerce-mobile-e2e": {
       "tags": [],
       "implicitDependencies": ["ecomerce-mobile"]
+    },
+    "ecommerce-desktop": {
+      "tags": []
+    },
+    "ecommerce-desktop-e2e": {
+      "tags": [],
+      "implicitDependencies": ["ecommerce-desktop"]
+    },
+    "core": {
+      "tags": []
+    },
+    "utilities": {
+      "tags": []
+    },
+    "products": {
+      "tags": []
+    },
+    "products-mobile": {
+      "tags": []
+    },
+    "products-desktop": {
+      "tags": []
+    },
+    "data": {
+      "tags": []
     }
   }
 }
