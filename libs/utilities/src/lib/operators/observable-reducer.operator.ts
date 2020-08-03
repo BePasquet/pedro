@@ -3,11 +3,11 @@ import { scan, share } from 'rxjs/operators';
 
 export function observableReducer<S>(
   initialState: S,
-  ...statePieces: Observable<Partial<S>>[]
+  ...stateSlice: Observable<Partial<S>>[]
 ): Observable<S> {
-  return merge(...statePieces).pipe(
+  return merge(...stateSlice).pipe(
     scan(
-      (state: S, payload: Partial<S>) => ({ ...state, ...payload }),
+      (state: S, slice: Partial<S>) => ({ ...state, ...slice }),
       initialState
     ),
     share()
