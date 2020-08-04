@@ -58,13 +58,13 @@ export class Products {
 
   readonly pagination$: Subject<Pagination> = new Subject<Pagination>();
 
-  readonly page$: Subject<number> = new Subject<number>();
-
   readonly categories: Option<Category | string>[] = PRODUCTS_CATEGORIES;
 
   readonly sortOptions: Option<Sort>[] = PRODUCTS_SORT_OPTIONS;
 
   protected readonly subscriptions: Subscription = new Subscription();
+
+  private readonly page$: Subject<number> = new Subject<number>();
 
   constructor(private readonly store: Store<ProductsPartialState>) {
     const storeSlice$ = this.store.pipe(select(selectProductComponentState));
