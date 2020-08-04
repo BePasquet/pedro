@@ -1,4 +1,5 @@
 import { ProductFilter } from '@pedro/data';
+import { ProductsComponentState } from '../../core/interfaces/products-component-state.interface';
 import { ProductsControls } from '../../core/interfaces/products.controls.interface';
 
 export function controlsToProductFilter({
@@ -28,4 +29,13 @@ export const CONTROLS_INITIAL_STATE: ProductsControls = {
     active: null,
     direction: null,
   },
+};
+
+export const PRODUCTS_COMPONENT_INITIAL_STATE: ProductsComponentState = {
+  products: [],
+  loading: false,
+  loaded: false,
+  total: 0,
+  error: null,
+  page: 1,
 };

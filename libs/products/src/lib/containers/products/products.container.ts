@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { Sort } from '@angular/material/sort';
-import { select, Store } from '@ngrx/store';
+import { createSelector, select, Store } from '@ngrx/store';
 import {
   getMoreProducts,
   getProducts,
@@ -12,7 +12,7 @@ import {
   selectProductsLoading,
   selectProductsTotal,
 } from '@pedro/core';
-import { Category, Pagination, Product, ServerError } from '@pedro/data';
+import { Category, Pagination } from '@pedro/data';
 import { mapValueToObjWithProp, observableReducer } from '@pedro/utilities';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
 import {
@@ -24,14 +24,31 @@ import {
   withLatestFrom,
 } from 'rxjs/operators';
 import { PRODUCTS_CATEGORIES, PRODUCTS_SORT_OPTIONS } from '../../core/const';
+import { ProductsComponentState } from '../../core/interfaces/products-component-state.interface';
 import {
   controlsToProductFilter,
   CONTROLS_INITIAL_STATE,
+  PRODUCTS_COMPONENT_INITIAL_STATE,
 } from './products.helper';
+
+const selectProductComponentState = createSelector(
+  selectProducts,
+  selectProductsLoading,
+  selectProductsLoaded,
+  selectProductsTotal,
+  selectProductsError,
+  (products, loading, loaded, total, error) => ({
+    products,
+    loading,
+    loaded,
+    total,
+    error,
+  })
+);
 
 @Directive()
 export class Products {
-  page = 1;
+  readonly componentState$: Observable<ProductsComponentState>;
 
   readonly query$: Subject<string> = new Subject<string>();
 
@@ -41,25 +58,7 @@ export class Products {
 
   readonly pagination$: Subject<Pagination> = new Subject<Pagination>();
 
-  readonly products$: Observable<Product[]> = this.store.pipe(
-    select(selectProducts)
-  );
-
-  readonly loading$: Observable<boolean> = this.store.pipe(
-    select(selectProductsLoading)
-  );
-
-  readonly loaded$: Observable<boolean> = this.store.pipe(
-    select(selectProductsLoaded)
-  );
-
-  readonly total$: Observable<number> = this.store.pipe(
-    select(selectProductsTotal)
-  );
-
-  readonly error$: Observable<ServerError> = this.store.pipe(
-    select(selectProductsError)
-  );
+  readonly page$: Subject<number> = new Subject<number>();
 
   readonly categories: Option<Category | string>[] = PRODUCTS_CATEGORIES;
 
@@ -68,6 +67,16 @@ export class Products {
   protected readonly subscriptions: Subscription = new Subscription();
 
   constructor(private readonly store: Store<ProductsPartialState>) {
+    const storeSlice$ = this.store.pipe(select(selectProductComponentState));
+
+    const page$ = this.page$.pipe(mapValueToObjWithProp('page'));
+
+    this.componentState$ = observableReducer(
+      PRODUCTS_COMPONENT_INITIAL_STATE,
+      storeSlice$,
+      page$
+    );
+
     const categorySlice$ = this.category$
       .asObservable()
       .pipe(mapValueToObjWithProp('category'));
@@ -92,7 +101,7 @@ export class Products {
     ).pipe(startWith(CONTROLS_INITIAL_STATE), map(controlsToProductFilter));
 
     const requestMoreProducts$ = this.pagination$.asObservable().pipe(
-      tap(() => (this.page = this.page + 1)),
+      tap(({ offset }) => this.page$.next(offset / 10 + 1)),
       withLatestFrom(filterChanges$),
       tap(([pagination, filter]) =>
         this.store.dispatch(
@@ -102,7 +111,7 @@ export class Products {
     );
 
     const requestProducts$ = filterChanges$.pipe(
-      tap(() => (this.page = 1)),
+      tap(() => this.page$.next(1)),
       tap((filter) => this.store.dispatch(getProducts({ payload: filter })))
     );
 
