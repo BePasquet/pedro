@@ -66,8 +66,8 @@
         mat-mini-fab
         (click)="
           pagination$.next({
-            offset: componentState.page * 10,
-            limit: 10
+            offset: componentState.page * paginationLimit,
+            limit: paginationLimit
           })
         "
       >

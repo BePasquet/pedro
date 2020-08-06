@@ -1,26 +1,11 @@
-import { ProductFilter } from '@pedro/data';
+import { Pagination, ProductFilter } from '@pedro/data';
 import { ProductsComponentState } from '../../core/interfaces/products-component-state.interface';
 import { ProductsControls } from '../../core/interfaces/products.controls.interface';
 
-export function controlsToProductFilter({
-  category,
-  orderBy: { active, direction },
-  name,
-}: ProductsControls): ProductFilter {
-  let orderBy = {};
-
-  if (!!direction) {
-    orderBy = { [active]: direction };
-  }
-
-  return {
-    name,
-    category: !!category ? category : null,
-    limit: 10,
-    offset: 0,
-    orderBy,
-  };
-}
+export const PAGINATION_INITIAL_STATE: Pagination = {
+  limit: 10,
+  offset: 0,
+};
 
 export const CONTROLS_INITIAL_STATE: ProductsControls = {
   name: '',
@@ -39,3 +24,22 @@ export const PRODUCTS_COMPONENT_INITIAL_STATE: ProductsComponentState = {
   error: null,
   page: 1,
 };
+
+export function controlsToProductFilter({
+  category,
+  orderBy: { active, direction },
+  name,
+}: ProductsControls): ProductFilter {
+  let orderBy = {};
+
+  if (!!direction) {
+    orderBy = { [active]: direction };
+  }
+
+  return {
+    name,
+    category: !!category ? category : null,
+    ...PAGINATION_INITIAL_STATE,
+    orderBy,
+  };
+}
