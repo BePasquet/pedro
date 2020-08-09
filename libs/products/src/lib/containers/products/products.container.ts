@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { ChangeDetectorRef, Directive } from '@angular/core';
 import { Sort } from '@angular/material/sort';
 import { createSelector, select, Store } from '@ngrx/store';
 import {
@@ -13,8 +13,8 @@ import {
   selectProductsTotal,
 } from '@pedro/core';
 import { Category, Pagination } from '@pedro/data';
-import { observableReducer } from '@pedro/utilities';
-import { merge, Observable, Subject, Subscription } from 'rxjs';
+import { observableReducer, stateChanges } from '@pedro/utilities';
+import { merge, Subject, Subscription } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -49,7 +49,7 @@ const selectProductComponentState = createSelector(
 
 @Directive()
 export class Products {
-  readonly state$: Observable<ProductsComponentState>;
+  state: ProductsComponentState;
 
   readonly setState: Subject<Partial<ProductsComponentState>> = new Subject<
     Partial<ProductsComponentState>
@@ -71,7 +71,10 @@ export class Products {
 
   protected readonly subscriptions: Subscription = new Subscription();
 
-  constructor(private readonly store: Store<ProductsPartialState>) {
+  constructor(
+    private readonly store: Store<ProductsPartialState>,
+    private readonly changeDetectorRef: ChangeDetectorRef
+  ) {
     /*
       Hi Ben i write some comments to walk you through so is not so tedious to read
       hope you don't grab your head when you see the code haha
@@ -91,12 +94,20 @@ export class Products {
     /*
       Method to merge component state with global state from store, when components get to big i don't know if is it better
       to use a reducer actions and effects for component state.
+      also trigger change detection on observable next this is use for zoneless app (ecommerce mobile ngZone is set noop)
     */
-    this.state$ = observableReducer(
+    const state$ = stateChanges(
       PRODUCTS_COMPONENT_INITIAL_STATE,
       storeSlice$,
       componentStateSlice$
+    ).pipe(
+      tap((state) => {
+        this.state = state;
+        this.changeDetectorRef.detectChanges();
+      })
     );
+
+    this.subscriptions.add(state$.subscribe());
 
     /*
       The code bellow works in the same way instead of keep in state of component keep state of filter

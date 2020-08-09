@@ -1,32 +1,23 @@
-<div class="products-container" *ngIf="state$ | async as state">
+<div class="products-container">
   <div fxLayout="row" fxLayoutGap="5%" fxLayoutAlign="start center">
-    <mat-form-field fxFlex="50">
-      <mat-label>Name</mat-label>
-      <input
-        matInput
-        type="text"
-        (input)="query$.next($event?.target?.value)"
-      />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
-    <mat-form-field fxFlex="20">
-      <mat-label>Sort</mat-label>
-      <mat-select (valueChange)="orderBy$.next($event)">
-        <mat-option *ngFor="let sort of sortOptions" [value]="sort.value">{{
-          sort.label
-        }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field fxFlex="20">
-      <mat-label>Category</mat-label>
-      <mat-select (valueChange)="category$.next($event)">
-        <mat-option
-          *ngFor="let category of categories"
-          [value]="category.value"
-          >{{ category.label }}</mat-option
-        >
-      </mat-select>
-    </mat-form-field>
+    <input
+      matInput
+      placeholder="name"
+      type="text"
+      (input)="query$.next($event?.target?.value)"
+    />
+    <label>Sort</label>
+    <select (change)="orderBy$.next($event.target.value)">
+      <option *ngFor="let sort of sortOptions" [value]="sort.value">{{
+        sort.label
+      }}</option>
+    </select>
+    <label>Category</label>
+    <select (change)="category$.next($event.target.value)">
+      <option *ngFor="let category of categories" [value]="category.value">{{
+        category.label
+      }}</option>
+    </select>
   </div>
 
   <div fxLayout="row wrap" *ngIf="state.loaded && !!state.total">
