@@ -1,7 +1,4 @@
-<div
-  class="products-container"
-  *ngIf="componentState$ | async as componentState"
->
+<div class="products-container" *ngIf="state$ | async as state">
   <div fxLayout="row" fxLayoutGap="5%" fxLayoutAlign="start center">
     <mat-form-field fxFlex="50">
       <mat-label>Name</mat-label>
@@ -32,14 +29,11 @@
     </mat-form-field>
   </div>
 
-  <div
-    fxLayout="row wrap"
-    *ngIf="componentState.loaded && !!componentState.total"
-  >
+  <div fxLayout="row wrap" *ngIf="state.loaded && !!state.total">
     <div
       class="card-container separator-s"
       [fxFlex]="'calc((100% - 1em) / 2 )'"
-      *ngFor="let product of componentState.products"
+      *ngFor="let product of state.products"
     >
       <mat-card>
         <mat-card-title>{{ product.name }}</mat-card-title>
@@ -56,17 +50,14 @@
       fxFlex="100"
       fxLayout="column"
       fxLayoutAlign="center center"
-      *ngIf="
-        componentState.products.length < componentState.total &&
-        !componentState.loading
-      "
+      *ngIf="state.products.length < state.total && !state.loading"
     >
       <button
         color="primary"
         mat-mini-fab
         (click)="
           pagination$.next({
-            offset: componentState.page * paginationLimit,
+            offset: state.page * paginationLimit,
             limit: paginationLimit
           })
         "
@@ -76,14 +67,14 @@
     </div>
   </div>
   <div
-    *ngIf="componentState.loading"
+    *ngIf="state.loading"
     fxLayout="column"
     fxLayoutAlign="center center"
     class="separator-m"
   >
     <mat-spinner [diameter]="50"></mat-spinner>
   </div>
-  <ng-container *ngIf="componentState.loaded && !componentState.total">
+  <ng-container *ngIf="state.loaded && !state.total">
     <h3>Sorry there is no product to show</h3>
   </ng-container>
 </div>

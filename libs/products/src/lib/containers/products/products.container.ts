@@ -13,7 +13,7 @@ import {
   selectProductsTotal,
 } from '@pedro/core';
 import { Category, Pagination } from '@pedro/data';
-import { mapValueToObjWithProp, observableReducer } from '@pedro/utilities';
+import { observableReducer } from '@pedro/utilities';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
 import {
   debounceTime,
@@ -49,7 +49,11 @@ const selectProductComponentState = createSelector(
 
 @Directive()
 export class Products {
-  readonly componentState$: Observable<ProductsComponentState>;
+  readonly state$: Observable<ProductsComponentState>;
+
+  readonly setState: Subject<Partial<ProductsComponentState>> = new Subject<
+    Partial<ProductsComponentState>
+  >();
 
   readonly query$: Subject<string> = new Subject<string>();
 
@@ -67,8 +71,6 @@ export class Products {
 
   protected readonly subscriptions: Subscription = new Subscription();
 
-  private readonly page$: Subject<number> = new Subject<number>();
-
   constructor(private readonly store: Store<ProductsPartialState>) {
     /*
       Hi Ben i write some comments to walk you through so is not so tedious to read
@@ -82,18 +84,18 @@ export class Products {
     const storeSlice$ = this.store.pipe(select(selectProductComponentState));
 
     /* 
-      Component state page to keep track of pagination as example
+      Represents state that is contain in the component and can change state can be updated via setSate ex: this.setState.next({page: 1, ...etc});
     */
-    const page$ = this.page$.pipe(mapValueToObjWithProp('page'));
+    const componentStateSlice$ = this.setState.asObservable();
 
     /*
       Method to merge component state with global state from store, when components get to big i don't know if is it better
       to use a reducer actions and effects for component state.
     */
-    this.componentState$ = observableReducer(
+    this.state$ = observableReducer(
       PRODUCTS_COMPONENT_INITIAL_STATE,
       storeSlice$,
-      page$
+      componentStateSlice$
     );
 
     /*
@@ -108,22 +110,19 @@ export class Products {
       ``
       i don't know what will be better
     */
-
     const categorySlice$ = this.category$
       .asObservable()
-      .pipe(mapValueToObjWithProp('category'));
+      .pipe(map((category) => ({ category })));
 
     const orderBySlice$ = this.orderBy$
       .asObservable()
-      .pipe(mapValueToObjWithProp('orderBy'));
+      .pipe(map((orderBy) => ({ orderBy })));
 
-    const nameSlice$ = this.query$
-      .asObservable()
-      .pipe(
-        debounceTime(250),
-        distinctUntilChanged(),
-        mapValueToObjWithProp('name')
-      );
+    const nameSlice$ = this.query$.asObservable().pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      map((name) => ({ name }))
+    );
 
     const filterChanges$ = observableReducer(
       CONTROLS_INITIAL_STATE,
@@ -133,20 +132,23 @@ export class Products {
     ).pipe(startWith(CONTROLS_INITIAL_STATE), map(controlsToProductFilter));
 
     const requestMoreProducts$ = this.pagination$.asObservable().pipe(
-      tap(({ offset }) =>
-        this.page$.next(offset / PAGINATION_INITIAL_STATE.limit + 1)
-      ),
       withLatestFrom(filterChanges$),
-      tap(([pagination, filter]) =>
+      tap(([pagination, filter]) => {
+        this.setState.next({
+          page: pagination.offset / PAGINATION_INITIAL_STATE.limit + 1,
+        });
+
         this.store.dispatch(
           getMoreProducts({ payload: { ...filter, ...pagination } })
-        )
-      )
+        );
+      })
     );
 
     const requestProducts$ = filterChanges$.pipe(
-      tap(() => this.page$.next(1)),
-      tap((filter) => this.store.dispatch(getProducts({ payload: filter })))
+      tap((filter) => {
+        this.setState.next({ page: 1 });
+        this.store.dispatch(getProducts({ payload: filter }));
+      })
     );
 
     /* 
@@ -154,8 +156,8 @@ export class Products {
       this.subscriptions.add(requestProducts$$.subscribe());
       this.subscriptions.add(requestMoreProducts$.subscribe());
     */
-    const componentEffect$ = merge(requestProducts$, requestMoreProducts$);
+    const effects$ = merge(requestProducts$, requestMoreProducts$);
 
-    this.subscriptions.add(componentEffect$.subscribe());
+    this.subscriptions.add(effects$.subscribe());
   }
 }
