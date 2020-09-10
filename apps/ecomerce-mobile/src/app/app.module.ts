@@ -1,7 +1,6 @@
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -21,7 +20,6 @@ import { AppComponent } from './app.component';
       maxAge: 25,
       logOnly: environment.production,
     }),
-    BrowserAnimationsModule,
     HttpClientModule,
   ],
   providers: [{ provide: ENVIRONMENT_TOKEN_KEY, useValue: environment }],

@@ -1,5 +1,5 @@
 import { merge, Observable } from 'rxjs';
-import { scan, share } from 'rxjs/operators';
+import { scan, shareReplay } from 'rxjs/operators';
 
 export function observableReducer<S>(
   initialState: S,
@@ -10,6 +10,6 @@ export function observableReducer<S>(
       (state: S, slice: Partial<S>) => ({ ...state, ...slice }),
       initialState
     ),
-    share()
+    shareReplay(1)
   );
 }

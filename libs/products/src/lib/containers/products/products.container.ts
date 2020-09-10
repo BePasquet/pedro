@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Directive } from '@angular/core';
+import { ChangeDetectorRef, Directive, OnDestroy } from '@angular/core';
 import { Sort } from '@angular/material/sort';
 import { createSelector, select, Store } from '@ngrx/store';
 import {
@@ -48,7 +48,7 @@ const selectProductComponentState = createSelector(
 );
 
 @Directive()
-export class Products {
+export class Products implements OnDestroy {
   state: ProductsComponentState;
 
   readonly setState: Subject<Partial<ProductsComponentState>> = new Subject<
@@ -132,5 +132,9 @@ export class Products {
     const effects$ = merge(requestProducts$, requestMoreProducts$);
 
     this.subscriptions.add(effects$.subscribe());
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }
