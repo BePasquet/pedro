@@ -1,24 +1,11 @@
 <div class="products-container">
-  <div fxLayout="row" fxLayoutGap="5%" fxLayoutAlign="start center">
-    <input
-      matInput
-      placeholder="name"
-      type="text"
-      (input)="query$.next($event?.target?.value)"
-    />
-    <label>Sort</label>
-    <select (change)="orderBy$.next($event.target.value)">
-      <option *ngFor="let sort of sortOptions" [value]="sort.value">{{
-        sort.label
-      }}</option>
-    </select>
-    <label>Category</label>
-    <select (change)="category$.next($event.target.value)">
-      <option *ngFor="let category of categories" [value]="category.value">{{
-        category.label
-      }}</option>
-    </select>
-  </div>
+  <pedro-products-filter
+    [categories]="categories"
+    [sortOptions]="sortOptions"
+    (textChange)="query$.next($event)"
+    (orderByChange)="orderBy$.next($event)"
+    (categoryChange)="category$.next($event)"
+  ></pedro-products-filter>
 
   <div fxLayout="row wrap" *ngIf="state.loaded && !!state.total">
     <div

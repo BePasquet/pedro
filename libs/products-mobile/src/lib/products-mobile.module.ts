@@ -14,9 +14,10 @@ import {
   PRODUCTS_STATE_KEY,
 } from '@pedro/core';
 import { ProductsMobileComponent } from './containers/products-mobile/products-mobile.component';
+import { ProductsFilterComponent } from './components/products-filter/products-filter.component';
 
 @NgModule({
-  declarations: [ProductsMobileComponent],
+  declarations: [ProductsMobileComponent, ProductsFilterComponent],
   imports: [
     CommonModule,
     StoreModule.forFeature(PRODUCTS_STATE_KEY, productsReducer),
