@@ -109,6 +109,13 @@ export class Products implements OnDestroy {
       nameSlice$
     ).pipe(startWith(CONTROLS_INITIAL_STATE), map(controlsToProductFilter));
 
+    const requestProducts$ = filterChanges$.pipe(
+      tap((filter) => {
+        this.setState.next({ page: 1 });
+        this.store.dispatch(getProducts({ payload: filter }));
+      })
+    );
+
     const requestMoreProducts$ = this.pagination$.pipe(
       withLatestFrom(filterChanges$),
       tap(([pagination, filter]) => {
@@ -119,13 +126,6 @@ export class Products implements OnDestroy {
         this.store.dispatch(
           getMoreProducts({ payload: { ...filter, ...pagination } })
         );
-      })
-    );
-
-    const requestProducts$ = filterChanges$.pipe(
-      tap((filter) => {
-        this.setState.next({ page: 1 });
-        this.store.dispatch(getProducts({ payload: filter }));
       })
     );
 
