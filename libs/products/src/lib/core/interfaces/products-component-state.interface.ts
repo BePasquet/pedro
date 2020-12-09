@@ -1,3 +1,4 @@
+import { Option } from '@pedro/core';
 import { Product, ServerError } from '@pedro/data';
 
 export interface ProductsComponentState {
@@ -7,4 +8,6 @@ export interface ProductsComponentState {
   total: number;
   error: ServerError;
   page: number;
+  categories?: Option<any>[];
+  sortOptions?: Option<any>[];
 }

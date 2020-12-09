@@ -1,3 +1,11 @@
+import { createSelector } from '@ngrx/store';
+import {
+  selectProducts,
+  selectProductsError,
+  selectProductsLoaded,
+  selectProductsLoading,
+  selectProductsTotal,
+} from '@pedro/core';
 import { Pagination, ProductFilter } from '@pedro/data';
 import { ProductsComponentState } from '../../core/interfaces/products-component-state.interface';
 import { ProductsControls } from '../../core/interfaces/products.controls.interface';
@@ -43,3 +51,18 @@ export function controlsToProductFilter({
     orderBy,
   };
 }
+
+export const selectProductComponentState = createSelector(
+  selectProducts,
+  selectProductsLoading,
+  selectProductsLoaded,
+  selectProductsTotal,
+  selectProductsError,
+  (products, loading, loaded, total, error) => ({
+    products,
+    loading,
+    loaded,
+    total,
+    error,
+  })
+);

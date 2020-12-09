@@ -1,12 +1,11 @@
 <div class="products-container">
   <pedro-products-filter
-    [categories]="categories"
-    [sortOptions]="sortOptions"
-    (textChange)="query$.next($event)"
-    (orderByChange)="orderBy$.next($event)"
-    (categoryChange)="category$.next($event)"
+    [categories]="state.categories"
+    [sortOptions]="state.sortOptions"
+    (textChange)="controls.query$.next($event)"
+    (orderByChange)="controls.orderBy$.next($event)"
+    (categoryChange)="controls.category$.next($event)"
   ></pedro-products-filter>
-
   <div fxLayout="row wrap" *ngIf="state.loaded && !!state.total">
     <div
       class="card-container separator-s"
@@ -18,9 +17,9 @@
         <mat-card-content>
           <img [src]="product.imgUrl" />
         </mat-card-content>
-        <mat-card-footer fxLayout="row" fxLayoutAlign="end center"
-          >{{ product.price }}</mat-card-footer
-        >
+        <mat-card-footer fxLayout="row" fxLayoutAlign="end center">{{
+          product.price
+        }}</mat-card-footer>
       </mat-card>
     </div>
 
@@ -34,9 +33,9 @@
         color="primary"
         mat-mini-fab
         (click)="
-          pagination$.next({
-            offset: state.page * paginationLimit,
-            limit: paginationLimit
+          controls.pagination$.next({
+            offset: state.page * state.paginationLimit,
+            limit: state.paginationLimit
           })
         "
       >

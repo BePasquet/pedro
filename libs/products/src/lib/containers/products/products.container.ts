@@ -1,16 +1,10 @@
 import { ChangeDetectorRef, Directive, OnDestroy } from '@angular/core';
 import { Sort } from '@angular/material/sort';
-import { createSelector, select, Store } from '@ngrx/store';
+import { select, Store } from '@ngrx/store';
 import {
   getMoreProducts,
   getProducts,
-  Option,
   ProductsPartialState,
-  selectProducts,
-  selectProductsError,
-  selectProductsLoaded,
-  selectProductsLoading,
-  selectProductsTotal,
 } from '@pedro/core';
 import { Category, Pagination } from '@pedro/data';
 import { observableReducer, stateChanges } from '@pedro/utilities';
@@ -19,6 +13,7 @@ import {
   debounceTime,
   distinctUntilChanged,
   map,
+  mapTo,
   startWith,
   tap,
   withLatestFrom,
@@ -30,66 +25,35 @@ import {
   CONTROLS_INITIAL_STATE,
   PAGINATION_INITIAL_STATE,
   PRODUCTS_COMPONENT_INITIAL_STATE,
+  selectProductComponentState,
 } from './products.helper';
-
-const selectProductComponentState = createSelector(
-  selectProducts,
-  selectProductsLoading,
-  selectProductsLoaded,
-  selectProductsTotal,
-  selectProductsError,
-  (products, loading, loaded, total, error) => ({
-    products,
-    loading,
-    loaded,
-    total,
-    error,
-  })
-);
 
 @Directive()
 export class Products implements OnDestroy {
   state: ProductsComponentState;
 
-  readonly setState: Subject<Partial<ProductsComponentState>> = new Subject<
-    Partial<ProductsComponentState>
-  >();
+  readonly setState = new Subject<Partial<ProductsComponentState>>();
 
-  readonly query$: Subject<string> = new Subject<string>();
+  readonly query$ = new Subject<string>();
 
-  readonly category$: Subject<Category> = new Subject<Category>();
+  readonly category$ = new Subject<Category>();
 
-  readonly orderBy$: Subject<Sort> = new Subject<Sort>();
+  readonly orderBy$ = new Subject<Sort>();
 
-  readonly pagination$: Subject<Pagination> = new Subject<Pagination>();
+  readonly pagination$ = new Subject<Pagination>();
 
-  readonly categories: Option<Category | string>[] = PRODUCTS_CATEGORIES;
+  readonly categories = PRODUCTS_CATEGORIES;
 
-  readonly sortOptions: Option<Sort>[] = PRODUCTS_SORT_OPTIONS;
+  readonly sortOptions = PRODUCTS_SORT_OPTIONS;
 
-  readonly paginationLimit: number = PAGINATION_INITIAL_STATE.limit;
+  readonly paginationLimit = PAGINATION_INITIAL_STATE.limit;
 
-  protected readonly subscriptions: Subscription = new Subscription();
+  protected readonly subscriptions = new Subscription();
 
   constructor(
     private readonly store: Store<ProductsPartialState>,
     private readonly changeDetectorRef: ChangeDetectorRef
   ) {
-    const storeSlice$ = this.store.pipe(select(selectProductComponentState));
-
-    const state$ = stateChanges(
-      PRODUCTS_COMPONENT_INITIAL_STATE,
-      storeSlice$,
-      this.setState
-    ).pipe(
-      tap((state) => {
-        this.state = state;
-        this.changeDetectorRef.detectChanges();
-      })
-    );
-
-    this.subscriptions.add(state$.subscribe());
-
     const categorySlice$ = this.category$.pipe(
       map((category) => ({ category }))
     );
@@ -109,27 +73,45 @@ export class Products implements OnDestroy {
       nameSlice$
     ).pipe(startWith(CONTROLS_INITIAL_STATE), map(controlsToProductFilter));
 
+    const resetPage$ = filterChanges$.pipe(mapTo({ page: 1 }));
+
+    const changePage$ = this.pagination$.pipe(
+      map((pagination) => ({
+        page: pagination.offset / PAGINATION_INITIAL_STATE.limit + 1,
+      }))
+    );
+
     const requestProducts$ = filterChanges$.pipe(
-      tap((filter) => {
-        this.setState.next({ page: 1 });
-        this.store.dispatch(getProducts({ payload: filter }));
-      })
+      tap((filter) => this.store.dispatch(getProducts({ payload: filter })))
     );
 
     const requestMoreProducts$ = this.pagination$.pipe(
       withLatestFrom(filterChanges$),
-      tap(([pagination, filter]) => {
-        this.setState.next({
-          page: pagination.offset / PAGINATION_INITIAL_STATE.limit + 1,
-        });
-
+      tap(([pagination, filter]) =>
         this.store.dispatch(
           getMoreProducts({ payload: { ...filter, ...pagination } })
-        );
-      })
+        )
+      )
     );
 
     const effects$ = merge(requestProducts$, requestMoreProducts$);
+
+    const storeSlice$ = this.store.pipe(select(selectProductComponentState));
+
+    const state$ = stateChanges(
+      PRODUCTS_COMPONENT_INITIAL_STATE,
+      storeSlice$,
+      resetPage$,
+      changePage$,
+      this.setState
+    ).pipe(
+      tap((state) => {
+        this.state = state;
+        this.changeDetectorRef.detectChanges();
+      })
+    );
+
+    this.subscriptions.add(state$.subscribe());
 
     this.subscriptions.add(effects$.subscribe());
   }
