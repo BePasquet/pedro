@@ -1,4 +1,4 @@
-<div class="products-container">
+<div class="products-container" *rxLet="state$; let state">
   <pedro-products-filter
     [categories]="categories"
     [sortOptions]="sortOptions"
@@ -18,9 +18,9 @@
         <mat-card-content>
           <img [src]="product.imgUrl" />
         </mat-card-content>
-        <mat-card-footer fxLayout="row" fxLayoutAlign="end center"
-          >{{ product.price }}</mat-card-footer
-        >
+        <mat-card-footer fxLayout="row" fxLayoutAlign="end center">{{
+          product.price
+        }}</mat-card-footer>
       </mat-card>
     </div>
 

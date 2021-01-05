@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Directive, OnDestroy } from '@angular/core';
+import { Directive, OnDestroy } from '@angular/core';
 import { Sort } from '@angular/material/sort';
 import { select, Store } from '@ngrx/store';
 import {
@@ -7,8 +7,8 @@ import {
   ProductsPartialState,
 } from '@pedro/core';
 import { Category, Pagination } from '@pedro/data';
-import { observableReducer, stateChanges } from '@pedro/utilities';
-import { merge, Subject, Subscription } from 'rxjs';
+import { observableReducer } from '@pedro/utilities';
+import { merge, Observable, Subject, Subscription } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -30,7 +30,7 @@ import {
 
 @Directive()
 export class Products implements OnDestroy {
-  state: ProductsComponentState;
+  readonly state$: Observable<ProductsComponentState>;
 
   readonly setState = new Subject<Partial<ProductsComponentState>>();
 
@@ -50,10 +50,7 @@ export class Products implements OnDestroy {
 
   protected readonly subscriptions = new Subscription();
 
-  constructor(
-    private readonly store: Store<ProductsPartialState>,
-    private readonly changeDetectorRef: ChangeDetectorRef
-  ) {
+  constructor(private readonly store: Store<ProductsPartialState>) {
     const categorySlice$ = this.category$.pipe(
       map((category) => ({ category }))
     );
@@ -98,20 +95,13 @@ export class Products implements OnDestroy {
 
     const storeSlice$ = this.store.pipe(select(selectProductComponentState));
 
-    const state$ = stateChanges(
+    this.state$ = observableReducer(
       PRODUCTS_COMPONENT_INITIAL_STATE,
       storeSlice$,
       resetPage$,
       changePage$,
       this.setState
-    ).pipe(
-      tap((state) => {
-        this.state = state;
-        this.changeDetectorRef.detectChanges();
-      })
     );
-
-    this.subscriptions.add(state$.subscribe());
 
     this.subscriptions.add(effects$.subscribe());
   }
